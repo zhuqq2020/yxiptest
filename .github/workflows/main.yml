@@ -45,16 +45,21 @@ jobs:
     # 步骤6：提交更改
     - name: Commit and push changes
       run: |
-        # 检查是否有文件变化
-        if git diff --quiet -- ip.txt; then
-          echo "🔄 未检测到IP变化，无需提交"
+        # 检查文件是否存在且有变化
+        if [ -f "ip.txt" ]; then
+          echo "📄 ip.txt 文件已生成"
+          # 检查文件是否有内容变化
+          if git diff --exit-code -- ip.txt > /dev/null 2>&1; then
+            echo "🔄 ip.txt 内容未变化，无需提交"
+          else
+            echo "📝 检测到IP变化，准备提交"
+            git add ip.txt
+            git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
+            git pull origin main --rebase
+            git push origin main
+            echo "✅ IP列表更新成功"
+          fi
         else
-          echo "📝 检测到IP变化，准备提交"
-          git add ip.txt
-          git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
-          
-          # 拉取最新更改并推送
-          git pull origin main --rebase
-          git push origin main
-          echo "✅ IP列表更新成功"
+          echo "❌ ip.txt 文件未生成，脚本可能执行失败"
+          exit 1
         fi
