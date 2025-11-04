@@ -40,7 +40,7 @@ jobs:
     # 步骤5：运行脚本
     - name: Run IP collection script
       run: |
-        python collect_ips_sec.py
+        python collect_ips.py
 
     # 步骤6：提交更改
     - name: Commit and push changes
