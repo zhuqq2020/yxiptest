@@ -2,7 +2,7 @@ import requests
 import re
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 目标URL列表
@@ -43,8 +43,14 @@ if os.path.exists('ip.txt'):
 ipv4_sources = {}  # ip: source
 ipv6_sources = {}  # ip: source
 
-# 获取当前时间戳，格式为年月日时分（202511042015）
-current_time = datetime.now().strftime("%Y%m%d%H%M")
+# 获取北京时间
+def get_beijing_time():
+    # UTC时间+8小时得到北京时间
+    utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
+    beijing_time = utc_now.astimezone(timezone(timedelta(hours=8)))
+    return beijing_time.strftime("%Y%m%d%H%M")
+
+current_time = get_beijing_time()
 
 # 获取IP延迟（3次ping，每次间隔1秒，计算平均延迟）
 def get_ping_latency(ip: str, num_pings: int = 3, interval: int = 1) -> tuple[str, float]:
@@ -162,6 +168,13 @@ def fetch_ip_delays(ip_store, ip_type="IPv4") -> dict:
     print(f"\n开始测试 {len(ip_store)} 个{ip_type}的延迟...")
     ip_delays = {}
     
+    # 如果是IPv6，跳过ping测试，直接返回无限延迟
+    if ip_type == "IPv6":
+        print("跳过IPv6的ping测速...")
+        for ip in ip_store.keys():
+            ip_delays[ip] = float('inf')
+        return ip_delays
+    
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = {executor.submit(get_ping_latency, ip): ip for ip in ip_store.keys()}
         
@@ -186,10 +199,9 @@ def save_all_ips_to_file(ipv4_delays, ipv6_delays, ipv4_sources, ipv6_sources, f
             source = ipv4_sources.get(ip, 'unknown')
             all_ips.append((ip, latency, source, "IPv4"))
     
-    # 处理IPv6地址
+    # 处理IPv6地址 - 即使延迟为inf也保存，但放在最后
     if ipv6_delays:
-        valid_ipv6 = {ip: latency for ip, latency in ipv6_delays.items() if latency != float('inf')}
-        for ip, latency in valid_ipv6.items():
+        for ip, latency in ipv6_delays.items():
             source = ipv6_sources.get(ip, 'unknown')
             all_ips.append((ip, latency, source, "IPv6"))
     
@@ -197,15 +209,19 @@ def save_all_ips_to_file(ipv4_delays, ipv6_delays, ipv4_sources, ipv6_sources, f
         print("错误: 所有IP测试均失败，未找到有效的IP地址")
         return
     
-    # 按延迟升序排列并选择前100个
-    sorted_ips = sorted(all_ips, key=lambda x: x[1])[:100]
+    # 先按类型排序（IPv4在前），然后按延迟升序排列
+    sorted_ips = sorted(all_ips, key=lambda x: (x[3] != "IPv4", x[1]))
     
-    print(f"\n延迟最低的前 {len(sorted_ips)} 个IP (包含IPv4和IPv6):")
+    print(f"\n排序后的IP列表 (共 {len(sorted_ips)} 个):")
     ipv4_count = 0
     ipv6_count = 0
     
     for i, (ip, latency, source, ip_type) in enumerate(sorted_ips, 1):
-        print(f"{i}. {ip} - 平均延迟: {latency:.3f}ms - 类型: {ip_type} - 来源: {source}")
+        if latency == float('inf'):
+            print(f"{i}. {ip} - 延迟: 未测试 - 类型: {ip_type} - 来源: {source}")
+        else:
+            print(f"{i}. {ip} - 平均延迟: {latency:.3f}ms - 类型: {ip_type} - 来源: {source}")
+        
         if ip_type == "IPv4":
             ipv4_count += 1
         else:
@@ -214,11 +230,14 @@ def save_all_ips_to_file(ipv4_delays, ipv6_delays, ipv4_sources, ipv6_sources, f
     # 写入文件，在备注中添加IP类型
     with open(filename, 'w') as f:
         for ip, latency, source, ip_type in sorted_ips:
-            f.write(f'{ip}#{source}优选_{ip_type}_{current_time}_{latency:.3f}ms\n')
+            if latency == float('inf'):
+                f.write(f'{ip}#{source}优选_{ip_type}_{current_time}_未测试\n')
+            else:
+                f.write(f'{ip}#{source}优选_{ip_type}_{current_time}_{latency:.3f}ms\n')
     
     print(f'\n已保存 {len(sorted_ips)} 个IP到 {filename}')
     print(f'其中 IPv4: {ipv4_count} 个, IPv6: {ipv6_count} 个')
-    print(f'格式: IP#来源_类型_时间 延迟')
+    print(f'格式: IP#来源_类型_时间_延迟')
 
 # 主流程
 print("=== Cloudflare IP收集工具开始运行 ===")
