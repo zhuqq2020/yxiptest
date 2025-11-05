@@ -30,8 +30,8 @@ ipv4_sources = {}  # ip: source
 
 # 获取北京时间
 def get_beijing_time():
-    # UTC时间+8小时得到北京时间
-    utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
+    # 使用时区感知的UTC时间
+    utc_now = datetime.now(timezone.utc)
     beijing_time = utc_now.astimezone(timezone(timedelta(hours=8)))
     return beijing_time.strftime("%Y%m%d%H%M")
 
@@ -175,9 +175,9 @@ def save_all_ips_to_file(ipv4_delays, ipv4_sources, filename):
     with open(filename, 'w') as f:
         for ip, latency, source, ip_type in sorted_ips:
             if latency == float('inf'):
-                f.write(f'{ip}#{ip_type}_{current_time}_{source}优选_未测试\n')
+                f.write(f'{ip}#{source}优选_{ip_type}_{current_time}_未测试\n')
             else:
-                f.write(f'{ip}#{ip_type}_{current_time}_{source}优选_{latency:.3f}ms\n')
+                f.write(f'{ip}#{source}优选_{ip_type}_{current_time}_{latency:.3f}ms\n')
     
     print(f'\n已保存 {len(sorted_ips)} 个IP到 {filename}')
     print(f'格式: IP#来源_类型_时间_延迟')
