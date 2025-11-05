@@ -40,26 +40,44 @@ jobs:
     # 步骤5：运行脚本
     - name: Run IP collection script
       run: |
+        echo "🔄 开始运行IP收集脚本..."
         python collect_ips.py
 
-    # 步骤6：提交更改
+    # 步骤6：调试检查
+    - name: Check generated files
+      run: |
+        echo "📁 工作目录: $(pwd)"
+        echo "📁 目录内容:"
+        ls -la
+        echo "🔍 查找所有ip.txt文件:"
+        find . -name "ip.txt" -type f 2>/dev/null || echo "未找到ip.txt文件"
+        
+        # 检查文件是否存在
+        if [ -f "ip.txt" ]; then
+          echo "✅ ip.txt 文件已生成"
+          echo "📊 文件信息:"
+          ls -la ip.txt
+          echo "📝 文件内容预览:"
+          head -n 5 ip.txt
+          echo "📏 总行数: $(wc -l < ip.txt)"
+        else
+          echo "❌ ip.txt 文件未找到"
+          exit 1
+        fi
+
+    # 步骤7：提交更改
     - name: Commit and push changes
       run: |
-        # 检查文件是否存在且有变化
-        if [ -f "ip.txt" ]; then
-          echo "📄 ip.txt 文件已生成"
-          # 检查文件是否有内容变化
-          if git diff --exit-code -- ip.txt > /dev/null 2>&1; then
-            echo "🔄 ip.txt 内容未变化，无需提交"
-          else
-            echo "📝 检测到IP变化，准备提交"
-            git add ip.txt
-            git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
-            git pull origin main --rebase
-            git push origin main
-            echo "✅ IP列表更新成功"
-          fi
+        echo "🔄 准备提交更改..."
+        # 检查文件是否有变化
+        git status
+        if git diff --exit-code -- ip.txt > /dev/null 2>&1; then
+          echo "🔄 ip.txt 内容未变化，无需提交"
         else
-          echo "❌ ip.txt 文件未生成，脚本可能执行失败"
-          exit 1
+          echo "📝 检测到IP变化，准备提交"
+          git add ip.txt
+          git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
+          git pull origin main --rebase
+          git push origin main
+          echo "✅ IP列表更新成功"
         fi
