@@ -267,6 +267,6 @@ else:
     print("未找到IPv6地址")
 
 # 合并保存所有IP到一个文件
-save_all_ips_to_file(ipv4_delays, ipv6_delays, ipv4_sources, ipv6_sources, 'ip.txt')
-
+#save_all_ips_to_file(ipv4_delays, ipv6_delays, ipv4_sources, ipv6_sources, 'ip.txt')
+save_all_ips_to_file(ipv4_delays, ipv4_sources, 'ip.txt')
 print("\n=== IP收集完成 ===")
