@@ -214,7 +214,7 @@ def save_all_ips_to_file(ipv4_delays, ipv6_delays, ipv4_sources, ipv6_sources, f
     # 写入文件，在备注中添加IP类型
     with open(filename, 'w') as f:
         for ip, latency, source, ip_type in sorted_ips:
-            f.write(f'{ip}#{source}_{ip_type}_{current_time}_{latency:.3f}ms\n')
+            f.write(f'{ip}#{source}优选_{ip_type}_{current_time}_{latency:.3f}ms\n')
     
     print(f'\n已保存 {len(sorted_ips)} 个IP到 {filename}')
     print(f'其中 IPv4: {ipv4_count} 个, IPv6: {ipv6_count} 个')
