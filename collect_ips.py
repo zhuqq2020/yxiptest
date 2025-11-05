@@ -231,9 +231,9 @@ def save_all_ips_to_file(ipv4_delays, ipv6_delays, ipv4_sources, ipv6_sources, f
     with open(filename, 'w') as f:
         for ip, latency, source, ip_type in sorted_ips:
             if latency == float('inf'):
-                f.write(f'{ip}#{ip_type}_{current_time}_{source}优选_\n')
-            else:
                 f.write(f'{ip}#{ip_type}_{current_time}_{source}优选\n')
+            else:
+                f.write(f'{ip}#{ip_type}_{current_time}_{source}优选_{latency:.3f}ms\n')
     
     print(f'\n已保存 {len(sorted_ips)} 个IP到 {filename}')
     print(f'其中 IPv4: {ipv4_count} 个, IPv6: {ipv6_count} 个')
