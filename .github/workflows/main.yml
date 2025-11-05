@@ -80,7 +80,7 @@ jobs:
           git commit -m "Auto update IP list - Initial file - $(date +'%Y-%m-%d %H:%M:%S')" --allow-empty
         else
           #echo "📝 检测到IP变化，提交更改"
-          #git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
+          git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
         fi
         
         # 拉取最新代码并推送
