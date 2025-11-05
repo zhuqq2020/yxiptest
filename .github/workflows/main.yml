@@ -34,94 +34,58 @@ jobs:
     # 步骤4：配置git用户信息
     - name: Configure Git
       run: |
-        git config --global user.email "tianshideyou@proton.me"
-        git config --global user.name "tianshipapa"
+        git config --global user.email "zhuqq029@qq.com"
+        git config --global user.name "zhuqq2020"
 
-    # 步骤5：运行前检查目录
-    - name: Pre-run directory check
-      run: |
-        echo "📁 运行前工作目录: $(pwd)"
-        echo "📁 运行前目录内容:"
-        ls -la
-        echo "🔍 检查 collect_ips.py 是否存在:"
-        if [ -f "collect_ips.py" ]; then
-          echo "✅ collect_ips.py 存在"
-          echo "文件大小: $(wc -l < collect_ips.py) 行"
-        else
-          echo "❌ collect_ips.py 不存在"
-          exit 1
-        fi
-
-    # 步骤6：运行脚本
+    # 步骤5：运行脚本
     - name: Run IP collection script
       run: |
         echo "🔄 开始运行IP收集脚本..."
-        # 设置更详细的Python输出
         python collect_ips.py
         echo "✅ 脚本执行完成"
 
-    # 步骤7：运行后详细检查
-    - name: Post-run detailed check
+    # 步骤6：检查文件
+    - name: Check generated file
       run: |
-        echo "📁 运行后工作目录: $(pwd)"
-        echo "📁 运行后完整目录内容:"
-        ls -la
-        echo "🔍 详细查找所有文件:"
-        find . -type f -name "*.txt" | head -20
-        echo "📊 检查文件系统使用情况:"
-        df -h
-        echo "💾 检查磁盘inode:"
-        df -i
-
-    # 步骤8：专门检查ip.txt
-    - name: Check ip.txt specifically
-      run: |
-        echo "🔍 专门检查ip.txt文件..."
         if [ -f "ip.txt" ]; then
-          echo "✅ ip.txt 文件存在"
-          echo "📊 文件详细信息:"
-          ls -la ip.txt
-          echo "📝 文件权限: $(stat -c "%A %a %U:%G" ip.txt)"
-          echo "📏 文件大小: $(wc -c < ip.txt) 字节"
-          echo "📄 文件行数: $(wc -l < ip.txt)"
-          echo "🔍 文件内容预览:"
-          head -n 10 ip.txt
-          echo "📋 最后几行:"
-          tail -n 5 ip.txt
+          echo "✅ ip.txt 文件已生成"
+          echo "📏 文件大小: $(wc -l < ip.txt) 行"
+          echo "📝 文件内容预览:"
+          head -n 5 ip.txt
         else
-          echo "❌ ip.txt 文件不存在"
-          echo "🔎 在整个工作区搜索:"
-          find $GITHUB_WORKSPACE -name "ip.txt" -type f 2>/dev/null | while read file; do
-            echo "找到文件: $file"
-            ls -la "$file"
-          done
+          echo "❌ ip.txt 文件未生成"
           exit 1
         fi
 
-    # 步骤9：提交更改
+    # 步骤7：提交更改（改进版本）
     - name: Commit and push changes
       run: |
         echo "🔄 准备提交更改..."
         
-        # 检查git状态
+        # 显示git状态
         echo "📊 Git状态:"
         git status
         
-        # 检查文件变化
-        echo "📝 Git文件变化:"
-        git diff --name-status
+        # 显示文件内容（用于调试）
+        echo "📄 ip.txt 文件内容:"
+        cat ip.txt
         
-        # 检查ip.txt是否有实际内容变化
-        if git diff --exit-code ip.txt > /dev/null 2>&1; then
-          echo "🔄 ip.txt 内容未变化，无需提交"
+        # 添加文件到git（无论是否变化）
+        git add ip.txt
+        
+        # 检查是否有更改需要提交
+        if git diff --cached --quiet; then
+          echo "🔄 没有检测到内容变化，但因为是首次生成，强制创建提交"
+          # 即使内容相同也创建提交，确保文件被跟踪
+          git commit -m "Auto update IP list - Initial file - $(date +'%Y-%m-%d %H:%M:%S')" --allow-empty
         else
-          echo "📝 检测到IP变化，准备提交"
-          git add ip.txt
-          git status
+          echo "📝 检测到IP变化，提交更改"
           git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
-          echo "🔁 拉取最新代码..."
-          git pull origin main --rebase
-          echo "🚀 推送更改..."
-          git push origin main
-          echo "✅ IP列表更新成功"
         fi
+        
+        # 拉取最新代码并推送
+        echo "🔁 拉取最新代码..."
+        git pull origin main --rebase
+        echo "🚀 推送更改..."
+        git push origin main
+        echo "✅ IP列表更新成功"
