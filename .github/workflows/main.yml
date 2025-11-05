@@ -79,8 +79,8 @@ jobs:
           # 即使内容相同也创建提交，确保文件被跟踪
           git commit -m "Auto update IP list - Initial file - $(date +'%Y-%m-%d %H:%M:%S')" --allow-empty
         else
-          echo "📝 检测到IP变化，提交更改"
-          git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
+          #echo "📝 检测到IP变化，提交更改"
+          #git commit -m "Auto update IP list - $(date +'%Y-%m-%d %H:%M:%S')"
         fi
         
         # 拉取最新代码并推送
