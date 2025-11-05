@@ -175,12 +175,12 @@ def save_all_ips_to_file(ipv4_delays, ipv4_sources, filename):
     with open(filename, 'w') as f:
         for ip, latency, source, ip_type in sorted_ips:
             if latency == float('inf'):
-                f.write(f'{ip}#{source}优选_{ip_type}_{current_time}_未测试\n')
+                f.write(f'{ip}#{ip_type}_{current_time}_{source}优选_未测试\n')
             else:
-                f.write(f'{ip}#{source}优选_{ip_type}_{current_time}_{latency:.3f}ms\n')
+                f.write(f'{ip}#{ip_type}_{current_time}_{source}优选_{latency:.3f}ms\n')
     
     print(f'\n已保存 {len(sorted_ips)} 个IP到 {filename}')
-    print(f'格式: IP#来源_类型_时间_延迟')
+    print(f'格式: IP#类型_时间_来源_延迟')
 
 # 主流程
 print("=== Cloudflare IP收集工具开始运行 ===")
